@@ -23,7 +23,6 @@ Terminal3 - Server(PSP):
 $cd src/Server(PSP)/
 $./Server(PSP)
 ```
-```
 
 ## References
 - HELib: https://github.com/shaih/HElib
