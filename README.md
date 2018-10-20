@@ -1,6 +1,6 @@
 # Privacy-Preserving Recommendation for Location-Based Services with Fully Homomorphic Encryption
 Implementation of the protocol with the functions:
-1. Service providers can compute aggregate information concerning user behavior patterns homomorphically, and send the encrypted results to PSP to ensure decryption, while maintaining the privacy of individual users. 
+1. Compute aggregate information concerning user behavior patterns homomorphically while maintaining the privacy of individual users. 
 2. Encrypted database update.
 
 ## Deployment
