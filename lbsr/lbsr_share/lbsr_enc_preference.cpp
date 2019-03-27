@@ -75,7 +75,7 @@ struct EncPreference::Impl
         }
     }
 
-    void load_from_stream(istream& is, const std::string& pubkey_filename)
+    void load_from_stream(std::istream& is, const std::string& pubkey_filename)
     {
         is >> size_;
 

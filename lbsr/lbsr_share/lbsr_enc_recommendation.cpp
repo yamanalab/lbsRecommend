@@ -71,7 +71,7 @@ struct EncRecommendation::Impl
         }
     }
 
-    void load_from_stream(istream& is, const std::string& pubkey_filename)
+    void load_from_stream(std::istream& is, const std::string& pubkey_filename)
     {
         is >> size_;
 
@@ -159,21 +159,21 @@ struct EncRecommendation::Impl
         int sz = size_;
         long nslots = ea.size();
 
-        std::cout << sz << endl;
+        std::cout << sz << std::endl;
         if (nslots < sz)
         {
-            std::cerr << "nslots is too small!" << endl;
+            std::cerr << "nslots is too small!" << std::endl;
             exit(-1);
         }
 
         auto& ctxts = *ctxts_ptr_;
 
-        std::cout << "The decrept result is " << endl;
+        std::cout << "The decrept result is " << std::endl;
         for (int i = 0; i < sz; i++)
         {
             std::vector<long> res;
             ea.decrypt(ctxts[i], secretKey, res);
-            std::cout << res[0] << endl;
+            std::cout << res[0] << std::endl;
             outvec.push_back(res[0]);
         }
     }

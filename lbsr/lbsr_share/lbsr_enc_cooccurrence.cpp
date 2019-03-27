@@ -52,7 +52,7 @@ struct EncCoOccurrence::Impl
 
         if (nslots < static_cast<long>(size))
         {
-            cerr << "nslots is too small!" << std::endl;
+            std::cerr << "nslots is too small!" << std::endl;
             exit(-1);
         }
 
