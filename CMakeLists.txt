@@ -11,7 +11,7 @@ set(HELIB_DIR /usr/local/src/HElib/src)
 include_directories(${PROJECT_SOURCE_DIR}/lbsr ${PROJECT_SOURCE_DIR}/stdsc ${HELIB_DIR})
 link_directories(${HELIB_DIR})
 
-set(COMMON_LIBS stdsc lbsr_share fhe ntl gmp)
+set(COMMON_LIBS stdsc lbsr_share helib ntl gmp)
 
 add_subdirectory(stdsc)
 add_subdirectory(lbsr)
