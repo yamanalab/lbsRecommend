@@ -27,6 +27,11 @@ class CallbackFunctionContainer;
 class StateContext;
 }
 
+namespace lbsr_share
+{
+class SecureKeyFileManager;
+}
+
 namespace lbsr_psp
 {
 
@@ -38,8 +43,8 @@ class PSPThread
 public:
     PSPThread(const char* port, stdsc::CallbackFunctionContainer& callback,
               stdsc::StateContext& state,
-              const char* pubkey_filename = "pubkey.txt",
-              const char* seckey_filename = "seckey.txt");
+              lbsr_share::SecureKeyFileManager& skm,
+              bool is_generate_securekey = false);
     ~PSPThread(void) = default;
 
     void start(void);

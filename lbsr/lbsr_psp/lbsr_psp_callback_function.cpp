@@ -36,6 +36,34 @@
 namespace lbsr_psp
 {
 
+// CallbackFunctionRequestConnect
+
+void CallbackFunctionRequestConnect::request_function(
+  uint64_t code, stdsc::StateContext& state)
+{
+    STDSC_LOG_INFO("Received connect request. (current state : %lu)",
+                   state.current_state());
+
+    state.set(kEventConnectSocket);
+    STDSC_LOG_TRACE("End callback.");
+}
+DEFINE_DATA_FUNC(CallbackFunctionRequestConnect);
+DEFINE_DOWNLOAD_FUNC(CallbackFunctionRequestConnect);
+
+// CallbackFunctionRequestDisconnect
+
+void CallbackFunctionRequestDisconnect::request_function(
+  uint64_t code, stdsc::StateContext& state)
+{
+    STDSC_LOG_INFO("Received disconnect request. (current state : %lu)",
+                   state.current_state());
+
+    state.set(kEventDisconnectSocket);
+    STDSC_LOG_TRACE("End callback.");
+}
+DEFINE_DATA_FUNC(CallbackFunctionRequestDisconnect);
+DEFINE_DOWNLOAD_FUNC(CallbackFunctionRequestDisconnect);
+    
 // CallbackFunctionPubkeyRequest
 
 void CallbackFunctionPubkeyRequest::download_function(
@@ -44,7 +72,7 @@ void CallbackFunctionPubkeyRequest::download_function(
     STDSC_LOG_INFO("Received public key request. (current state : %lu)",
                    state.current_state());
     STDSC_THROW_CALLBACK_IF_CHECK(
-      kStateGeneratedKeys <= state.current_state(),
+      kStateConnected <= state.current_state(),
       "Warn: must be generatedkeys state to receive pubkey request.");
 
     auto skm = param_.get_skm();
@@ -68,7 +96,7 @@ void CallbackFunctionLocationInfo::data_function(uint64_t code,
     STDSC_LOG_INFO("Received location info. (current state : %lu)",
                    state.current_state());
     STDSC_THROW_CALLBACK_IF_CHECK(
-      kStateGeneratedKeys <= state.current_state(),
+      kStateConnected <= state.current_state(),
       "Warn: must be generatedkeys state to receive location info.");
 
     // TODO: Implementation for Location info.
@@ -87,7 +115,7 @@ void CallbackFunctionRecommList::data_function(uint64_t code,
     STDSC_LOG_INFO("Received recommendation list. (current state : %lu)",
                    state.current_state());
     STDSC_THROW_CALLBACK_IF_CHECK(
-      kStateGeneratedKeys <= state.current_state(),
+      kStateConnected <= state.current_state(),
       "Warn: must be generatedkeys state to receive recommendation list.");
 
     auto skm = param_.get_skm();

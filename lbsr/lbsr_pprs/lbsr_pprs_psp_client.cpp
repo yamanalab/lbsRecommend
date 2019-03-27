@@ -38,6 +38,9 @@ struct PSPClient::Impl
         client_.connect(host, port);
         state_.set(kEventConnectSocket);
         STDSC_LOG_INFO("Connected %s@%s", host, port);
+
+        STDSC_LOG_INFO("Requesting connect to PSP.");
+        client_.send_request_blocking(lbsr_share::kControlCodeRequestConnect);
     }
 
     ~Impl(void) = default;
@@ -50,7 +53,7 @@ struct PSPClient::Impl
 
         auto data = reinterpret_cast<const char*>(pubkey.data());
         auto size = pubkey.size();
-        STDSC_LOG_INFO("Created a public key file. (%s)", out_filename);
+        STDSC_LOG_INFO("Saved a public key file. (%s)", out_filename);
 
         std::ofstream ofs(out_filename, std::ios::binary);
         ofs.write(data, size);
@@ -60,6 +63,7 @@ struct PSPClient::Impl
 
     void upload_recomm_list(const stdsc::Buffer& buffer)
     {
+        STDSC_LOG_INFO("Sending encrypted recommendation list.");
         client_.send_data_blocking(lbsr_share::kControlCodeDataRecommList,
                                    buffer);
     }

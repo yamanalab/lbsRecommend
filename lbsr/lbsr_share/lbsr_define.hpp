@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-#ifndef DEFINE_HPP
-#define DEFINE_HPP
+#ifndef LBSR_DEFINE_HPP
+#define LBSR_DEFINE_HPP
 
-#define PSP_PORT_FOR_USER  "10001"
-#define PSP_PORT_FOR_PPRS  "10002"
-#define PPRS_PORT_FOR_USER "10003"
+#define LBSR_TIMEOUT_SEC (60)
+#define LBSR_RETRY_INTERVAL_USEC (2000000)
 
-#endif /* DEFINE_HPP */
+#endif /* LBSR_DEFINE_HPP */

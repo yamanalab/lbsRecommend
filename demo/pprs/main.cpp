@@ -22,7 +22,7 @@
 #include <stdsc/stdsc_log.hpp>
 #include <stdsc/stdsc_exception.hpp>
 #include <lbsr_share/lbsr_packet.hpp>
-#include <lbsr_pprs/lbsr_enc_database.hpp>
+#include <lbsr_pprs/lbsr_pprs_enc_database.hpp>
 #include <lbsr_pprs/lbsr_pprs_state.hpp>
 #include <lbsr_pprs/lbsr_pprs_psp_client.hpp>
 #include <lbsr_pprs/lbsr_pprs_thread.hpp>
@@ -30,15 +30,15 @@
 #include <lbsr_pprs/lbsr_pprs_callback_function.hpp>
 #include <share/define.hpp>
 
-static constexpr char* PubkeyFilename = (char*)"pubkey.txt";
-static constexpr char* CoOccurrenceInputFilename = (char*)"inputdata10.txt";
-static constexpr char* EncCoOccurrenceFilename = (char*)"enc_cooccurrence.txt";
-static constexpr char* EncPreferenceFilename = (char*)"enc_preference.txt";
-
+static constexpr char* PUBKEY_FILENAME = (char*)"pubkey.txt";
+static constexpr char* COOCCURRENCE_INPUT_FILENAME = (char*)"inputdata10.txt";
+static constexpr char* ENC_COOCCURRENCE_FILENAME =
+  (char*)"enc_cooccurrence.txt";
+static constexpr char* ENC_PREFERENCE_FILENAME = (char*)"enc_preference.txt";
 
 struct Option
 {
-    std::string input_filename = CoOccurrenceInputFilename;
+    std::string input_filename = COOCCURRENCE_INPUT_FILENAME;
 };
 
 void init(Option& option, int argc, char* argv[])
@@ -54,8 +54,7 @@ void init(Option& option, int argc, char* argv[])
                 break;
             case 'h':
             default:
-                printf("Usage: %s [-i input_filename]\n",
-                       argv[0]);
+                printf("Usage: %s [-i input_filename]\n", argv[0]);
                 exit(1);
         }
     }
@@ -63,15 +62,24 @@ void init(Option& option, int argc, char* argv[])
 
 void create_psp_server(lbsr_pprs::CallbackParam& param,
                        stdsc::StateContext& state,
-                       const char* port = SERVER_PORT_PPRS_FOR_USER)
+                       const char* port = PPRS_PORT_FOR_USER)
 {
+    stdsc::CallbackFunctionContainer callback;
+
+    std::shared_ptr<stdsc::CallbackFunction> cb_conn(
+      new lbsr_pprs::CallbackFunctionRequestConnect(param));
+    callback.set(lbsr_share::kControlCodeRequestConnect, cb_conn);
+
+    std::shared_ptr<stdsc::CallbackFunction> cb_disconn(
+      new lbsr_pprs::CallbackFunctionRequestDisconnect(param));
+    callback.set(lbsr_share::kControlCodeRequestDisconnect, cb_disconn);
+
     std::shared_ptr<stdsc::CallbackFunction> cb_pref(
       new lbsr_pprs::CallbackFunctionUserPreference(param));
+    callback.set(lbsr_share::kControlCodeDataUserPreference, cb_pref);
+
     std::shared_ptr<stdsc::CallbackFunction> cb_compute(
       new lbsr_pprs::CallbackFunctionComputeRequest(param));
-
-    stdsc::CallbackFunctionContainer callback;
-    callback.set(lbsr_share::kControlCodeDataUserPreference, cb_pref);
     callback.set(lbsr_share::kControlCodeRequestCompute, cb_compute);
 
     lbsr_pprs::PprsThread server(port, callback, state);
@@ -84,16 +92,16 @@ void exec(const Option& option)
     STDSC_LOG_INFO("Launched PPRS demo app");
     stdsc::StateContext state(std::make_shared<lbsr_pprs::StateInit>());
 
-    lbsr_pprs::PSPClient client("localhost", SERVER_PORT_PSP_FOR_PPRS, state);
-    client.download_pubkey(PubkeyFilename);
+    lbsr_pprs::PSPClient client("localhost", PSP_PORT_FOR_PPRS, state);
+    client.download_pubkey(PUBKEY_FILENAME);
 
-    lbsr_pprs::EncDatabase encdb(state, EncCoOccurrenceFilename);
-    encdb.initialize(option.input_filename, PubkeyFilename);
+    lbsr_pprs::EncDatabase encdb(state, ENC_COOCCURRENCE_FILENAME);
+    encdb.initialize(option.input_filename, PUBKEY_FILENAME);
 
     lbsr_pprs::CallbackParam param(client);
-    param.pubkey_filename = PubkeyFilename;
-    param.enc_cooccurrence_filename = EncCoOccurrenceFilename;
-    param.enc_preference_filename = EncPreferenceFilename;
+    param.pubkey_filename = PUBKEY_FILENAME;
+    param.enc_cooccurrence_filename = ENC_COOCCURRENCE_FILENAME;
+    param.enc_preference_filename = ENC_PREFERENCE_FILENAME;
 
     create_psp_server(param, state);
 }
@@ -109,11 +117,11 @@ int main(int argc, char* argv[])
     }
     catch (stdsc::AbstractException& e)
     {
-        STDSC_LOG_ERR("catch exception: %s", e.what());
+        STDSC_LOG_ERR("Err: %s", e.what());
     }
     catch (...)
     {
-        STDSC_LOG_ERR("catch unknown exception");
+        STDSC_LOG_ERR("Catch unknown exception");
     }
     return 0;
 }

@@ -34,7 +34,6 @@ enum StateId_t : uint64_t
     kStateNil = 0,
     kStateInit = 1,
     kStateConnected = 2,
-    kStateGeneratedKeys = 3,
     kStateDecryptedRecommList = 4,
     kStateComputed = 5,
     kStateExit = 6,
@@ -47,7 +46,6 @@ enum Event_t : uint64_t
 {
     kEventConnectSocket = 0,
     kEventDisconnectSocket = 1,
-    kEventGeneratedKeys = 2,
     kEventReceivedPubkey = 3,
     kEventReceivedLocationInfo = 4,
     kEventReceivedRecommList = 5,
@@ -59,8 +57,8 @@ enum Event_t : uint64_t
  */
 struct StateInit : public stdsc::State
 {
-    static std::shared_ptr<State> create();
-    StateInit(void);
+    static std::shared_ptr<State> create(size_t initial_connection_count = 0);
+    StateInit(size_t initial_connection_count = 0);
     virtual void set(stdsc::StateContext &sc, uint64_t event) override;
     virtual uint64_t id(void) const override
     {
@@ -77,35 +75,17 @@ private:
  */
 struct StateConnected : public stdsc::State
 {
-    static std::shared_ptr<stdsc::State> create();
-    StateConnected(void);
-    virtual void set(stdsc::StateContext &sc, uint64_t event) override;
-    virtual uint64_t id(void) const override
-    {
-        return kStateConnected;
-    }
-
-private:
-    struct Impl;
-    std::shared_ptr<Impl> pimpl_;
-};
-
-/**
- * @brief Provides 'GeneratedKeys' state.
- */
-struct StateGeneratedKeys : public stdsc::State
-{
     static std::shared_ptr<stdsc::State> create(bool is_received_location_info =
                                                   false,
                                                 bool is_received_recomm_list =
                                                   false);
 
-    StateGeneratedKeys(bool is_received_location_info = false,
-                       bool is_received_recomm_list = false);
+    StateConnected(bool is_received_location_info = false,
+                   bool is_received_recomm_list = false);
     virtual void set(stdsc::StateContext &sc, uint64_t event) override;
     virtual uint64_t id(void) const override
     {
-        return kStateGeneratedKeys;
+        return kStateConnected;
     }
 
 private:

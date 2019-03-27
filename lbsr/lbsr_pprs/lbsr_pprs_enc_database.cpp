@@ -2,7 +2,7 @@
 #include <fstream>
 #include <lbsr_share/lbsr_utility.hpp>
 #include <lbsr_share/lbsr_enc_cooccurrence.hpp>
-#include <lbsr_pprs/lbsr_enc_database.hpp>
+#include <lbsr_pprs/lbsr_pprs_enc_database.hpp>
 #include <lbsr_pprs/lbsr_pprs_state.hpp>
 
 namespace lbsr_pprs

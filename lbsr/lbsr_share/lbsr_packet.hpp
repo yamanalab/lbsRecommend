@@ -30,6 +30,8 @@ enum ControlCode_t : uint64_t
 {
     /* Code for Request packet: 0x201-0x2FF */
     kControlCodeRequestCompute = 0x201,
+    kControlCodeRequestConnect = 0x202,
+    kControlCodeRequestDisconnect = 0x203,
 
     /* Code for Data packet: 0x401-0x4FF */
     kControlCodeDataLocationInfo = 0x401,

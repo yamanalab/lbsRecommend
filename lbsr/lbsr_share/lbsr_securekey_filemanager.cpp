@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
+#include <sstream>
 #include <stdsc/stdsc_log.hpp>
+#include <stdsc/stdsc_exception.hpp>
 #include <lbsr_share/lbsr_utility.hpp>
 #include <lbsr_share/lbsr_securekey_filemanager.hpp>
 
@@ -42,6 +44,8 @@ struct SecureKeyFileManager::Impl
         FHEcontext context(m_, p_, r_);
         buildModChain(context, L_, c_);
 
+        STDSC_LOG_INFO("Generating secure keys.");
+
         NTL::ZZX G = context.alMod.getFactorsOverZZ()[0];
 
         FHESecKey secretKey(context);
@@ -52,17 +56,14 @@ struct SecureKeyFileManager::Impl
 
         EncryptedArray ea(context, G);
 
-        if (context.zMStar.numOfGens() != 1)
-        {
-            STDSC_LOG_ERR("noise increase when it rotates\n");
-            exit(0);
+        if (context.zMStar.numOfGens() != 1) {
+            STDSC_THROW_FAILURE("noise increase when it rotates\n");
         }
+
         for (int i = 0; i < (int)context.zMStar.numOfGens(); i++)
         {
-            if (!context.zMStar.SameOrd(i))
-            {
-                STDSC_LOG_ERR("noise increase when it rotates\n");
-                exit(0);
+            if (!context.zMStar.SameOrd(i)) {
+                STDSC_THROW_FAILURE("noise increase when it rotates\n");
             }
         }
 
@@ -97,7 +98,9 @@ struct SecureKeyFileManager::Impl
         std::ifstream ifs(pubkey_filename_, std::ios::binary);
         if (!ifs.is_open())
         {
-            std::cout << "failed to open " << pubkey_filename_ << std::endl;
+            std::ostringstream oss;
+            oss << "failed to open. (" << pubkey_filename_ << ")";
+            STDSC_THROW_FILE(oss.str());
         }
         else
         {
@@ -111,7 +114,9 @@ struct SecureKeyFileManager::Impl
         std::ifstream ifs(seckey_filename_, std::ios::binary);
         if (!ifs.is_open())
         {
-            std::cout << "failed to open " << seckey_filename_ << std::endl;
+            std::ostringstream oss;
+            oss << "failed to open. (" << seckey_filename_ << ")";
+            STDSC_THROW_FILE(oss.str());
         }
         else
         {

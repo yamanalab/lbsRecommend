@@ -25,6 +25,7 @@
 #include <stdsc/stdsc_log.hpp>
 #include <stdsc/stdsc_exception.hpp>
 #include <lbsr_share/lbsr_packet.hpp>
+#include <lbsr_share/lbsr_define.hpp>
 #include <lbsr_client/lbsr_client_psp_client.hpp>
 
 namespace lbsr_client
@@ -34,16 +35,15 @@ struct PSPClient<T>::Impl
 {
     std::shared_ptr<stdsc::ThreadException> te_;
 
-    Impl(const char* host, const char* port)
+    Impl(const char* host, const char* port) : host_(host), port_(port)
     {
         te_ = stdsc::ThreadException::create();
-        STDSC_LOG_INFO("Connecting to PSP.");
-        client_.connect(host, port);
     }
 
-    ~Impl(void)
+    void get_result(std::vector<long>& results)
     {
-        client_.close();
+        results.resize(results_.size());
+        std::copy(results_.begin(), results_.end(), results.begin());
     }
 
     void download_pubkey(const char* out_filename)
@@ -54,7 +54,7 @@ struct PSPClient<T>::Impl
 
         auto data = reinterpret_cast<const char*>(pubkey.data());
         auto size = pubkey.size();
-        STDSC_LOG_INFO("Created a public key file. (%s)", out_filename);
+        STDSC_LOG_INFO("Saved a public key file. (%s)", out_filename);
 
         std::ofstream ofs(out_filename, std::ios::binary);
         ofs.write(data, size);
@@ -64,24 +64,41 @@ struct PSPClient<T>::Impl
     {
         try
         {
+            constexpr uint32_t retry_interval_usec = LBSR_RETRY_INTERVAL_USEC;
+            constexpr uint32_t retry_interval_usec_to_request_result = 4000000;
+            constexpr uint32_t timeout_sec = LBSR_TIMEOUT_SEC;
+
+            STDSC_LOG_INFO("Connecting to PSP.");
+            client_.connect(host_, port_, retry_interval_usec, timeout_sec);
+            STDSC_LOG_INFO("Connected to PSP.");
+
+            STDSC_LOG_INFO("Requesting connect to PSP.");
+            client_.send_request_blocking(
+              lbsr_share::kControlCodeRequestConnect, retry_interval_usec,
+              timeout_sec);
+
+            download_pubkey(args.pubkey_filename.c_str());
+
             stdsc::Buffer dummy_locinfo_buffer(16);
             client_.send_data_blocking(lbsr_share::kControlCodeDataLocationInfo,
-                                       dummy_locinfo_buffer);
+                                       dummy_locinfo_buffer,
+                                       retry_interval_usec, timeout_sec);
 
             stdsc::Buffer result_buffer;
             client_.recv_data_blocking(lbsr_share::kControlCodeDownloadResult,
-                                       result_buffer);
+                                       result_buffer,
+                                       retry_interval_usec_to_request_result);
 
             size_t n = result_buffer.size() / sizeof(long);
-            std::vector<long> results(n);
-            memcpy(static_cast<void*>(&results[0]), result_buffer.data(),
+            results_.resize(n);
+            memcpy(static_cast<void*>(&results_[0]), result_buffer.data(),
                    result_buffer.size());
-            std::cout << "The std::vector of recommendation: ";
-            for (auto& v : results)
-            {
-                std::cout << v << " ";
-            }
-            std::cout << std::endl;
+
+            STDSC_LOG_INFO("Requesting disconnect to PSP.");
+            client_.send_request_blocking(
+              lbsr_share::kControlCodeRequestDisconnect, retry_interval_usec,
+              timeout_sec);
+            client_.close();
         }
         catch (const stdsc::AbstractException& e)
         {
@@ -91,7 +108,10 @@ struct PSPClient<T>::Impl
     }
 
 private:
+    const char* host_;
+    const char* port_;
     stdsc::Client client_;
+    std::vector<long> results_;
 };
 
 template <class T>
@@ -103,12 +123,7 @@ PSPClient<T>::PSPClient(const char* host, const char* port)
 template <class T>
 PSPClient<T>::~PSPClient(void)
 {
-}
-
-template <class T>
-void PSPClient<T>::download_pubkey(const char* out_filename)
-{
-    pimpl_->download_pubkey(out_filename);
+    super::join();
 }
 
 template <class T>
@@ -122,6 +137,13 @@ void PSPClient<T>::wait_for_finish(void)
 {
     super::join();
     pimpl_->te_->rethrow_if_has_exception();
+}
+
+template <class T>
+void PSPClient<T>::get_result(std::vector<long>& results)
+{
+    this->wait_for_finish();
+    pimpl_->get_result(results);
 }
 
 template <class T>

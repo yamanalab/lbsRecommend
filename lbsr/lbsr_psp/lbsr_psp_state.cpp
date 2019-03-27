@@ -23,16 +23,19 @@
 namespace lbsr_psp
 {
 
+/* client, PPRS */
+static constexpr std::size_t MAX_CLIENT_NUM = 2;
+
 struct StateInit::Impl
 {
-    Impl(void) : count_(0)
+    Impl(size_t initial_connection_count) : count_(initial_connection_count)
     {
     }
 
     void set(stdsc::StateContext& sc, uint64_t event)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        STDSC_LOG_TRACE("StateInit: event#%lu", event);
+        STDSC_LOG_TRACE("StateInit: event#%lu, conn_count:%ld", event, count_);
         switch (static_cast<Event_t>(event))
         {
             case kEventConnectSocket:
@@ -42,7 +45,7 @@ struct StateInit::Impl
                 }
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                --count_;
                 break;
             default:
                 break;
@@ -56,33 +59,6 @@ private:
 
 struct StateConnected::Impl
 {
-    Impl()
-    {
-    }
-
-    void set(stdsc::StateContext& sc, uint64_t event)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        STDSC_LOG_TRACE("StateConnected: event#%lu", event);
-        switch (static_cast<Event_t>(event))
-        {
-            case kEventGeneratedKeys:
-                sc.next_state(StateGeneratedKeys::create());
-                break;
-            case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
-                break;
-            default:
-                break;
-        }
-    }
-
-private:
-    std::mutex mutex_;
-};
-
-struct StateGeneratedKeys::Impl
-{
     Impl(bool is_received_location_info, bool is_received_recomm_list)
       : is_received_location_info_(is_received_location_info),
         is_received_recomm_list_(is_received_recomm_list)
@@ -92,7 +68,7 @@ struct StateGeneratedKeys::Impl
     void set(stdsc::StateContext& sc, uint64_t event)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        STDSC_LOG_TRACE("StateGeneratedKeys: event#%lu", event);
+        STDSC_LOG_TRACE("StateConnected: event#%lu", event);
         switch (static_cast<Event_t>(event))
         {
             case kEventReceivedLocationInfo:
@@ -102,7 +78,7 @@ struct StateGeneratedKeys::Impl
                 is_received_recomm_list_ = true;
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                sc.next_state(StateInit::create(MAX_CLIENT_NUM - 1));
                 break;
             default:
                 break;
@@ -136,7 +112,7 @@ struct StateDecryptedRecommList::Impl
                 sc.next_state(StateComputed::create());
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                sc.next_state(StateInit::create(MAX_CLIENT_NUM - 1));
                 break;
             default:
                 break;
@@ -166,7 +142,7 @@ struct StateComputed::Impl
                 sc.next_state(StateDecryptedRecommList::create());
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                sc.next_state(StateInit::create(MAX_CLIENT_NUM - 1));
                 break;
             default:
                 break;
@@ -193,13 +169,15 @@ private:
 
 // Init
 
-std::shared_ptr<stdsc::State> StateInit::create()
+std::shared_ptr<stdsc::State> StateInit::create(size_t initial_connection_count)
 {
-    auto s = std::shared_ptr<stdsc::State>(new StateInit());
+    auto s =
+      std::shared_ptr<stdsc::State>(new StateInit(initial_connection_count));
     return s;
 }
 
-StateInit::StateInit(void) : pimpl_(new Impl())
+StateInit::StateInit(size_t initial_connection_count)
+  : pimpl_(new Impl(initial_connection_count))
 {
 }
 
@@ -208,40 +186,23 @@ void StateInit::set(stdsc::StateContext& sc, uint64_t event)
     pimpl_->set(sc, event);
 }
 
-// Connected
-
-std::shared_ptr<stdsc::State> StateConnected::create(void)
-{
-    auto s = std::shared_ptr<stdsc::State>(new StateConnected());
-    return s;
-}
-
-StateConnected::StateConnected(void) : pimpl_(new Impl())
-{
-}
-
-void StateConnected::set(stdsc::StateContext& sc, uint64_t event)
-{
-    pimpl_->set(sc, event);
-}
-
 // GeneratedKeys
 
-std::shared_ptr<stdsc::State> StateGeneratedKeys::create(
+std::shared_ptr<stdsc::State> StateConnected::create(
   bool is_received_location_info, bool is_received_recomm_list)
 {
-    auto s = std::shared_ptr<stdsc::State>(new StateGeneratedKeys(
+    auto s = std::shared_ptr<stdsc::State>(new StateConnected(
       is_received_location_info, is_received_recomm_list));
     return s;
 }
 
-StateGeneratedKeys::StateGeneratedKeys(bool is_received_location_info,
+StateConnected::StateConnected(bool is_received_location_info,
                                        bool is_received_recomm_list)
   : pimpl_(new Impl(is_received_location_info, is_received_recomm_list))
 {
 }
 
-void StateGeneratedKeys::set(stdsc::StateContext& sc, uint64_t event)
+void StateConnected::set(stdsc::StateContext& sc, uint64_t event)
 {
     pimpl_->set(sc, event);
 }

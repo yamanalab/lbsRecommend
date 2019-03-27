@@ -36,6 +36,34 @@
 namespace lbsr_pprs
 {
 
+// CallbackFunctionRequestConnect
+
+void CallbackFunctionRequestConnect::request_function(
+  uint64_t code, stdsc::StateContext& state)
+{
+    STDSC_LOG_INFO("Received connect request. (current state : %lu)",
+                   state.current_state());
+
+    state.set(kEventConnectSocket);
+    STDSC_LOG_TRACE("End callback.");
+}
+DEFINE_DATA_FUNC(CallbackFunctionRequestConnect);
+DEFINE_DOWNLOAD_FUNC(CallbackFunctionRequestConnect);
+
+// CallbackFunctionRequestDisconnect
+
+void CallbackFunctionRequestDisconnect::request_function(
+  uint64_t code, stdsc::StateContext& state)
+{
+    STDSC_LOG_INFO("Received disconnect request. (current state : %lu)",
+                   state.current_state());
+
+    state.set(kEventDisconnectSocket);
+    STDSC_LOG_TRACE("End callback.");
+}
+DEFINE_DATA_FUNC(CallbackFunctionRequestDisconnect);
+DEFINE_DOWNLOAD_FUNC(CallbackFunctionRequestDisconnect);
+
 // CallbackFunctionUserPreference
 
 void CallbackFunctionUserPreference::data_function(uint64_t code,
@@ -95,6 +123,9 @@ void CallbackFunctionComputeRequest::request_function(
     lbsr_share::EncRecommendation enc_recommendation;
     enc_recommendation.generate(enc_preference_data, enc_cooccurrence_data,
                                 param_.pubkey_filename, size);
+
+    STDSC_LOG_INFO("Encrypting recommendation list. (size: %lu)",
+                   enc_recommendation.stream_size());
 
     stdsc::BufferStream buffstream(enc_recommendation.stream_size());
     std::iostream stream(&buffstream);

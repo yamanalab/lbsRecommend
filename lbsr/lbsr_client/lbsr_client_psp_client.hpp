@@ -19,6 +19,8 @@
 #define LBSR_CLIENT_PSP_CLIENT_HPP
 
 #include <memory>
+#include <vector>
+#include <string>
 #include <stdsc/stdsc_thread.hpp>
 
 namespace lbsr_client
@@ -37,10 +39,9 @@ public:
     PSPClient(const char* host, const char* port);
     virtual ~PSPClient(void);
 
-    void download_pubkey(const char* out_filename = "pukey.txt");
-
     void start(T& param);
     void wait_for_finish(void);
+    void get_result(std::vector<long>& resutls);
 
 private:
     virtual void exec(T& args,
@@ -52,6 +53,7 @@ private:
 
 struct PSPParam
 {
+    std::string pubkey_filename = "pukey.txt";
 };
 
 } /* namespace lbsr_client */

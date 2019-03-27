@@ -31,9 +31,8 @@ struct PprsThread::Impl
          stdsc::StateContext& state)
       : server_(new stdsc::Server<>(port, state)), state_(state)
     {
-        server_->set_callback(callback);
-        state_.set(kEventConnectSocket);
         STDSC_LOG_INFO("Lanched PPRS server (%s)", port);
+        server_->set_callback(callback);
     }
 
     ~Impl(void) = default;

@@ -24,10 +24,16 @@
 namespace lbsr_pprs
 {
 
+/* client, PSP */
+static constexpr std::size_t MAX_CLIENT_NUM = 2;
+
 struct StateInit::Impl
 {
-    Impl(void)
-      : count_(0), is_generated_occurrence_(false), is_received_pubkey_(false)
+    Impl(size_t initial_connection_count, bool is_generated_occurrence,
+         bool is_received_pubkey)
+      : count_(initial_connection_count),
+        is_generated_occurrence_(is_generated_occurrence),
+        is_received_pubkey_(is_received_pubkey)
     {
     }
 
@@ -41,7 +47,7 @@ struct StateInit::Impl
                 if (++count_ >= 2)
                 {
                     sc.next_state(StateConnected::create(
-                      is_generated_occurrence_, false, is_received_pubkey_));
+                      is_generated_occurrence_, is_received_pubkey_));
                 }
                 break;
             case kEventGeneratedOccurrence:
@@ -51,7 +57,7 @@ struct StateInit::Impl
                 is_received_pubkey_ = true;
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                --count_;
                 break;
             default:
                 break;
@@ -67,11 +73,10 @@ private:
 
 struct StateConnected::Impl
 {
-    Impl(bool is_generated_occurrence, bool is_received_user_preference,
-         bool is_received_pubkey)
+    Impl(bool is_generated_occurrence, bool is_received_pubkey)
       : is_generated_occurrence_(is_generated_occurrence),
-        is_received_user_preference_(is_received_user_preference),
-        is_received_pubkey_(is_received_pubkey)
+        is_received_pubkey_(is_received_pubkey),
+        is_received_user_preference_(false)
     {
     }
 
@@ -91,7 +96,9 @@ struct StateConnected::Impl
                 is_received_pubkey_ = true;
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                sc.next_state(StateInit::create(MAX_CLIENT_NUM - 1,
+                                                is_generated_occurrence_,
+                                                is_received_pubkey_));
                 break;
             default:
                 break;
@@ -106,8 +113,8 @@ struct StateConnected::Impl
 
 private:
     bool is_generated_occurrence_;
-    bool is_received_user_preference_;
     bool is_received_pubkey_;
+    bool is_received_user_preference_;
     std::mutex mutex_;
 };
 
@@ -127,7 +134,8 @@ struct StateReady::Impl
                 sc.next_state(StateComputed::create());
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                sc.next_state(
+                  StateInit::create(MAX_CLIENT_NUM - 1, true, true));
                 break;
             default:
                 break;
@@ -156,7 +164,8 @@ struct StateComputed::Impl
                 sc.next_state(StateReady::create());
                 break;
             case kEventDisconnectSocket:
-                sc.next_state(StateExit::create());
+                sc.next_state(
+                  StateInit::create(MAX_CLIENT_NUM - 1, true, true));
                 break;
             default:
                 break;
@@ -183,13 +192,19 @@ private:
 
 // Init
 
-std::shared_ptr<stdsc::State> StateInit::create()
+std::shared_ptr<stdsc::State> StateInit::create(size_t initial_connection_count,
+                                                bool is_generated_occurrence,
+                                                bool is_received_pubkey)
 {
-    auto s = std::shared_ptr<stdsc::State>(new StateInit());
+    auto s = std::shared_ptr<stdsc::State>(new StateInit(
+      initial_connection_count, is_generated_occurrence, is_received_pubkey));
     return s;
 }
 
-StateInit::StateInit(void) : pimpl_(new Impl())
+StateInit::StateInit(size_t initial_connection_count,
+                     bool is_generated_occurrence, bool is_received_pubkey)
+  : pimpl_(new Impl(initial_connection_count, is_generated_occurrence,
+                    is_received_pubkey))
 {
 }
 
@@ -201,20 +216,16 @@ void StateInit::set(stdsc::StateContext& sc, uint64_t event)
 // Connected
 
 std::shared_ptr<stdsc::State> StateConnected::create(
-  bool is_generated_occurrence, bool is_received_user_preference,
-  bool is_received_pubkey)
+  bool is_generated_occurrence, bool is_received_pubkey)
 {
     auto s = std::shared_ptr<stdsc::State>(
-      new StateConnected(is_generated_occurrence, is_received_user_preference,
-                         is_received_pubkey));
+      new StateConnected(is_generated_occurrence, is_received_pubkey));
     return s;
 }
 
 StateConnected::StateConnected(bool is_generated_occurrence,
-                               bool is_received_user_preference,
                                bool is_received_pubkey)
-  : pimpl_(new Impl(is_generated_occurrence, is_received_user_preference,
-                    is_received_pubkey))
+  : pimpl_(new Impl(is_generated_occurrence, is_received_pubkey))
 {
 }
 

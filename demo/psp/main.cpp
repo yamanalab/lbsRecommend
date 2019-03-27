@@ -23,16 +23,20 @@
 #include <lbsr_psp/lbsr_psp_state.hpp>
 #include <psp/server.hpp>
 
-static constexpr const char* PubkeyFilename = "pubkey.txt";
-static constexpr const char* SeckeyFilename = "seckey.txt";
-static constexpr const char* EncRecommendationFilename = "enc_recommendation.txt";
+static constexpr const char* PUBKEY_FILENAME = "pubkey.txt";
+static constexpr const char* SECKEY_FILENAME = "seckey.txt";
+static constexpr const char* ENC_RECOMMENDATION_FILENAME =
+  "enc_recommendation.txt";
 
-void init(lbsr_psp::CallbackParam& param, int argc, char* argv[])
+struct Param
 {
-    std::string pubkey_filename = PubkeyFilename;
-    std::string seckey_filename = SeckeyFilename;
-    bool enable_generate_securekey = false;
+    std::string pubkey_filename = PUBKEY_FILENAME;
+    std::string seckey_filename = SECKEY_FILENAME;
+    bool is_generate_securekey = false;
+};
 
+void init(Param& param, int argc, char* argv[])
+{
     int opt;
     opterr = 0;
     while ((opt = getopt(argc, argv, "p:s:gh")) != -1)
@@ -40,13 +44,13 @@ void init(lbsr_psp::CallbackParam& param, int argc, char* argv[])
         switch (opt)
         {
             case 'p':
-                pubkey_filename = optarg;
+                param.pubkey_filename = optarg;
                 break;
             case 's':
-                seckey_filename = optarg;
+                param.seckey_filename = optarg;
                 break;
             case 'g':
-                enable_generate_securekey = true;
+                param.is_generate_securekey = true;
                 break;
             case 'h':
             default:
@@ -56,26 +60,25 @@ void init(lbsr_psp::CallbackParam& param, int argc, char* argv[])
                 exit(1);
         }
     }
-
-    std::shared_ptr<lbsr_share::SecureKeyFileManager> skm_ptr(
-      new lbsr_share::SecureKeyFileManager(pubkey_filename, seckey_filename));
-    if (enable_generate_securekey)
-    {
-        STDSC_LOG_INFO("Generating secure keys.");
-        skm_ptr->initialize();
-    }
-    param.set_skm(skm_ptr);
-
-    param.enc_recommendation_filename = EncRecommendationFilename;
 }
 
-void exec(lbsr_psp::CallbackParam& param)
+void exec(const Param& param)
 {
+    lbsr_psp::CallbackParam cb_param;
+
+    std::shared_ptr<lbsr_share::SecureKeyFileManager> skm_ptr(
+      new lbsr_share::SecureKeyFileManager(param.pubkey_filename,
+                                           param.seckey_filename));
+    cb_param.set_skm(skm_ptr);
+    cb_param.enc_recommendation_filename = ENC_RECOMMENDATION_FILENAME;
+
     STDSC_LOG_INFO("Launched PSP demo app");
     stdsc::StateContext state(std::make_shared<lbsr_psp::StateInit>());
 
-    lbsr_demo::Server server_for_user(param, state, SERVER_PORT_PSP_FOR_USER);
-    lbsr_demo::Server server_for_pprs(param, state, SERVER_PORT_PSP_FOR_PPRS);
+    lbsr_demo::Server server_for_user(cb_param, state, PSP_PORT_FOR_USER,
+                                      param.is_generate_securekey);
+    lbsr_demo::Server server_for_pprs(cb_param, state, PSP_PORT_FOR_PPRS);
+    
     server_for_user.start();
     server_for_pprs.start();
 
@@ -88,17 +91,17 @@ int main(int argc, char* argv[])
     STDSC_INIT_LOG();
     try
     {
-        lbsr_psp::CallbackParam param;
+        Param param;
         init(param, argc, argv);
         exec(param);
     }
     catch (stdsc::AbstractException& e)
     {
-        STDSC_LOG_ERR("catch exception: %s", e.what());
+        STDSC_LOG_ERR("Err: %s", e.what());
     }
     catch (...)
     {
-        STDSC_LOG_ERR("catch unknown exception");
+        STDSC_LOG_ERR("Catch unknown exception");
     }
     return 0;
 }

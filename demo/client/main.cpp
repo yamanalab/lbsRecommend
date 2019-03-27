@@ -17,13 +17,14 @@
 
 #include <unistd.h>
 #include <string>
+#include <iostream>
 #include <stdsc/stdsc_log.hpp>
 #include <stdsc/stdsc_exception.hpp>
 #include <lbsr_client/lbsr_client_pprs_client.hpp>
 #include <lbsr_client/lbsr_client_psp_client.hpp>
 #include <share/define.hpp>
 
-static constexpr const char* PubkeyFilename = "pubkey.txt";
+static constexpr const char* PUBKEY_FILENAME = "pubkey.txt";
 
 struct Option
 {
@@ -55,18 +56,28 @@ void exec(Option& option)
     const char* host = "localhost";
 
     lbsr_client::PSPParam psp_param;
-    lbsr_client::PSPClient<> psp_client(host, SERVER_PORT_PSP_FOR_USER);
-    psp_client.download_pubkey(PubkeyFilename);
+    psp_param.pubkey_filename = PUBKEY_FILENAME;
+    lbsr_client::PSPClient<> psp_client(host, PSP_PORT_FOR_USER);
     psp_client.start(psp_param);
 
     lbsr_client::PPRSParam pprs_param;
     pprs_param.input_filename = option.input_filename;
-    pprs_param.pubkey_filename = PubkeyFilename;
-    lbsr_client::PPRSClient<> pprs_client(host, SERVER_PORT_PPRS_FOR_USER);
+    pprs_param.pubkey_filename = PUBKEY_FILENAME;
+    lbsr_client::PPRSClient<> pprs_client(host, PPRS_PORT_FOR_USER);
     pprs_client.start(pprs_param);
 
     psp_client.wait_for_finish();
     pprs_client.wait_for_finish();
+
+    std::vector<long> results;
+    psp_client.get_result(results);
+    
+    std::cout << "The std::vector of recommendation: ";
+    for (auto& v : results)
+    {
+        std::cout << v << " ";
+    }
+    std::cout << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -81,11 +92,11 @@ int main(int argc, char* argv[])
     }
     catch (stdsc::AbstractException& e)
     {
-        STDSC_LOG_ERR("catch exception: %s", e.what());
+        STDSC_LOG_ERR("Err: %s", e.what());
     }
     catch (...)
     {
-        STDSC_LOG_ERR("catch unknown exception");
+        STDSC_LOG_ERR("Catch unknown exception");
     }
 
     return 0;

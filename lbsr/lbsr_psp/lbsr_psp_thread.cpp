@@ -20,6 +20,7 @@
 #include <stdsc/stdsc_log.hpp>
 #include <stdsc/stdsc_exception.hpp>
 #include <lbsr_share/lbsr_utility.hpp>
+#include <lbsr_share/lbsr_securekey_filemanager.hpp>
 #include <lbsr_psp/lbsr_psp_thread.hpp>
 #include <lbsr_psp/lbsr_psp_state.hpp>
 
@@ -29,37 +30,37 @@ namespace lbsr_psp
 struct PSPThread::Impl
 {
     Impl(const char* port, stdsc::CallbackFunctionContainer& callback,
-         stdsc::StateContext& state, const char* pubkey_filename,
-         const char* seckey_filename)
-      : server_(new stdsc::Server<>(port, state)),
-        state_(state),
-        pubkey_filename_(pubkey_filename),
-        seckey_filename_(seckey_filename)
+         stdsc::StateContext& state, lbsr_share::SecureKeyFileManager& skm,
+         bool is_generate_securekey = false)
+      : server_(new stdsc::Server<>(port, state)), state_(state), skm_(skm)
     {
         server_->set_callback(callback);
-        state_.set(kEventConnectSocket);
         STDSC_LOG_INFO("Lanched PSP server (%s)", port);
+
+        if (is_generate_securekey) {
+            skm_.initialize();
+        }
     }
 
     ~Impl(void) = default;
 
     void start(void)
     {
-        if (!lbsr_share::utility::file_exist(pubkey_filename_))
+        if (!skm_.is_exist_pubkey())
         {
             std::ostringstream oss;
-            oss << "Err: public key file not found. (" << pubkey_filename_
+            oss << "Err: public key file not found. (" << skm_.pubkey_filename()
                 << ")" << std::endl;
             STDSC_THROW_FILE(oss.str());
         }
-        if (!lbsr_share::utility::file_exist(seckey_filename_))
+        if (!skm_.is_exist_seckey())
         {
             std::ostringstream oss;
-            oss << "Err: security key file not found. (" << seckey_filename_
+            oss << "Err: security key file not found. (" << skm_.seckey_filename()
                 << ")" << std::endl;
             STDSC_THROW_FILE(oss.str());
         }
-        state_.set(kEventGeneratedKeys);
+
         server_->start();
     }
 
@@ -71,15 +72,15 @@ struct PSPThread::Impl
 private:
     std::shared_ptr<stdsc::Server<>> server_;
     stdsc::StateContext& state_;
-    std::string pubkey_filename_;
-    std::string seckey_filename_;
+    lbsr_share::SecureKeyFileManager& skm_;
 };
 
 PSPThread::PSPThread(const char* port,
                      stdsc::CallbackFunctionContainer& callback,
-                     stdsc::StateContext& state, const char* pubkey_filename,
-                     const char* seckey_filename)
-  : pimpl_(new Impl(port, callback, state, pubkey_filename, seckey_filename))
+                     stdsc::StateContext& state,
+                     lbsr_share::SecureKeyFileManager& skm,
+                     bool is_generate_securekey)
+  : pimpl_(new Impl(port, callback, state, skm, is_generate_securekey))
 {
 }
 

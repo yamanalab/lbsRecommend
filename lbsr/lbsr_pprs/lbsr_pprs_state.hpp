@@ -55,8 +55,12 @@ enum Event_t : uint64_t
  */
 struct StateInit : public stdsc::State
 {
-    static std::shared_ptr<State> create();
-    StateInit(void);
+    static std::shared_ptr<State> create(size_t initial_connection_count = 0,
+                                         bool is_generated_occurrence = false,
+                                         bool is_received_pubkey = false);
+    StateInit(size_t initial_connection_count = 0,
+              bool is_generated_occurrence = false,
+              bool is_received_pubkey = false);
     virtual void set(stdsc::StateContext &sc, uint64_t event) override;
     virtual uint64_t id(void) const override
     {
@@ -74,11 +78,8 @@ private:
 struct StateConnected : public stdsc::State
 {
     static std::shared_ptr<stdsc::State> create(
-      bool is_generated_occurrence = false,
-      bool is_received_user_preference = false,
-      bool is_received_pubkey = false);
+      bool is_generated_occurrence = false, bool is_received_pubkey = false);
     StateConnected(bool is_generated_occurrence = false,
-                   bool is_received_user_preference = false,
                    bool is_received_pubkey = false);
     virtual void set(stdsc::StateContext &sc, uint64_t event) override;
     virtual uint64_t id(void) const override

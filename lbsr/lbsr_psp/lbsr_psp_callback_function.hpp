@@ -26,6 +26,50 @@ namespace lbsr_psp
 struct CallbackParam;
 
 /**
+ * @brief Provides callback function in receiving connect request.
+ */
+class CallbackFunctionRequestConnect : public stdsc::CallbackFunction
+{
+public:
+    CallbackFunctionRequestConnect(CallbackParam& param) : param_(param)
+    {
+    }
+
+protected:
+    virtual void request_function(uint64_t code,
+                                  stdsc::StateContext& state) override;
+    virtual void data_function(uint64_t code, const stdsc::Buffer& buffer,
+                               stdsc::StateContext& state) override;
+    virtual void download_function(uint64_t code, const stdsc::Socket& sock,
+                                   stdsc::StateContext& state) override;
+
+private:
+    CallbackParam& param_;
+};
+
+/**
+ * @brief Provides callback function in receiving disconnect request.
+ */
+class CallbackFunctionRequestDisconnect : public stdsc::CallbackFunction
+{
+public:
+    CallbackFunctionRequestDisconnect(CallbackParam& param) : param_(param)
+    {
+    }
+
+protected:
+    virtual void request_function(uint64_t code,
+                                  stdsc::StateContext& state) override;
+    virtual void data_function(uint64_t code, const stdsc::Buffer& buffer,
+                               stdsc::StateContext& state) override;
+    virtual void download_function(uint64_t code, const stdsc::Socket& sock,
+                                   stdsc::StateContext& state) override;
+
+private:
+    CallbackParam& param_;
+};
+    
+/**
  * @brief Provides callback function in receiving pubic key request.
  */
 class CallbackFunctionPubkeyRequest : public stdsc::CallbackFunction

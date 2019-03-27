@@ -1,6 +1,9 @@
+/build/
+/doc/html/
 
-# Created by https://www.gitignore.io/api/c++,macos
-# Edit at https://www.gitignore.io/?templates=c++,macos
+
+# Created by https://www.gitignore.io/api/c++,macos,linux,cmake
+# Edit at https://www.gitignore.io/?templates=c++,macos,linux,cmake
 
 ### C++ ###
 # Prerequisites
@@ -36,6 +39,38 @@
 *.out
 *.app
 
+### CMake ###
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+### CMake Patch ###
+# External projects
+*-prefix/
+
+### Linux ###
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
 ### macOS ###
 # General
 .DS_Store
@@ -64,4 +99,5 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# End of https://www.gitignore.io/api/c++,macos
+# End of https://www.gitignore.io/api/c++,macos,linux,cmake
+

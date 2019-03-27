@@ -1,5 +1,5 @@
-#ifndef LBSR_ENC_DATABASE_HPP
-#define LBSR_ENC_DATABASE_HPP
+#ifndef LBSR_PPRS_ENC_DATABASE_HPP
+#define LBSR_PPRS_ENC_DATABASE_HPP
 
 #include <string>
 #include <cstdbool>
@@ -32,4 +32,4 @@ private:
 
 } /* namespace lbsr_pprs */
 
-#endif /* LBSR_ENC_DATABASE_HPP */
+#endif /* LBSR_PPRS_ENC_DATABASE_HPP */

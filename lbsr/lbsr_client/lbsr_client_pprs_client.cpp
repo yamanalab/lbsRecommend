@@ -23,6 +23,7 @@
 #include <stdsc/stdsc_exception.hpp>
 #include <lbsr_share/lbsr_enc_preference.hpp>
 #include <lbsr_share/lbsr_packet.hpp>
+#include <lbsr_share/lbsr_define.hpp>
 #include <lbsr_client/lbsr_client_pprs_client.hpp>
 
 namespace lbsr_client
@@ -32,22 +33,30 @@ struct PPRSClient<T>::Impl
 {
     std::shared_ptr<stdsc::ThreadException> te_;
 
-    Impl(const char* host, const char* port)
+    Impl(const char* host, const char* port) : host_(host), port_(port)
     {
         te_ = stdsc::ThreadException::create();
-        STDSC_LOG_INFO("Connecting to PPRS.");
-        client_.connect(host, port);
-    }
-
-    ~Impl(void)
-    {
-        client_.close();
     }
 
     void exec(T& args, std::shared_ptr<stdsc::ThreadException> te)
     {
         try
         {
+            constexpr uint32_t retry_interval_usec = LBSR_RETRY_INTERVAL_USEC;
+            constexpr uint32_t retry_interval_usec_to_connect = 4000000;
+            constexpr uint32_t timeout_sec = LBSR_TIMEOUT_SEC;
+
+            STDSC_LOG_INFO("Connecting to PPRS.");
+            client_.connect(host_, port_, retry_interval_usec_to_connect,
+                            timeout_sec);
+            STDSC_LOG_INFO("Connected to PPRS.");
+
+            STDSC_LOG_INFO("Requesting connect to PPRS.");
+            client_.send_request_blocking(
+              lbsr_share::kControlCodeRequestConnect, retry_interval_usec,
+              timeout_sec);
+
+            STDSC_LOG_INFO("Encrypting preference.");
             lbsr_share::EncPreference enc_preference;
             enc_preference.generate(args.input_filename, args.pubkey_filename);
 
@@ -55,11 +64,20 @@ struct PPRSClient<T>::Impl
             std::iostream stream(&buffstream);
             enc_preference.save_to_stream(stream);
 
+            STDSC_LOG_INFO("Sending encrypted preference.");
             stdsc::Buffer* buffer = &buffstream;
             client_.send_data_blocking(
               lbsr_share::kControlCodeDataUserPreference, *buffer);
+
+            STDSC_LOG_INFO("Requesting compute.");
             client_.send_request_blocking(
               lbsr_share::kControlCodeRequestCompute);
+
+            STDSC_LOG_INFO("Requesting disconnect to PPRS.");
+            client_.send_request_blocking(
+              lbsr_share::kControlCodeRequestDisconnect, retry_interval_usec,
+              timeout_sec);
+            client_.close();
         }
         catch (const stdsc::AbstractException& e)
         {
@@ -69,6 +87,8 @@ struct PPRSClient<T>::Impl
     }
 
 private:
+    const char* host_;
+    const char* port_;
     stdsc::Client client_;
 };
 
