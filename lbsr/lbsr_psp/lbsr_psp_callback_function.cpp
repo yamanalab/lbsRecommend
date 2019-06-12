@@ -30,8 +30,8 @@
 #include <lbsr_psp/lbsr_psp_callback_param.hpp>
 #include <lbsr_psp/lbsr_psp_state.hpp>
 
-#include <FHE.h>
-#include <EncryptedArray.h>
+#include <helib/FHE.h>
+#include <helib/EncryptedArray.h>
 
 namespace lbsr_psp
 {

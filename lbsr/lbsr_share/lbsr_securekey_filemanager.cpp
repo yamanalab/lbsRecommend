@@ -21,8 +21,8 @@
 #include <lbsr_share/lbsr_utility.hpp>
 #include <lbsr_share/lbsr_securekey_filemanager.hpp>
 
-#include "FHE.h"
-#include "EncryptedArray.h"
+#include <helib/FHE.h>
+#include <helib/EncryptedArray.h>
 
 namespace lbsr_share
 {

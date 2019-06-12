@@ -16,7 +16,7 @@ Implementation of the protocol with the functions:
 * doxygen (If you generate a document)
 
 # Building
-1. Build [HElib](https://github.com/shaih/HElib), then you copy the HELib top directory to `/usr/local/src/HElib`.
+1. Build and install [HElib](https://github.com/shaih/HElib) according to Option 1 in INSTALL.md.
 2. Run following command to build the library.
     ```sh
     $ mkdir build && cd build

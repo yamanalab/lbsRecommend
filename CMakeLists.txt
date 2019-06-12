@@ -7,9 +7,9 @@ find_package(Threads REQUIRED)
 set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -pthread -Wall -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-O2 -g -std=c++11 -pthread -Wall")
 
-set(HELIB_DIR /usr/local/src/HElib/src)
-include_directories(${PROJECT_SOURCE_DIR}/lbsr ${PROJECT_SOURCE_DIR}/stdsc ${HELIB_DIR})
-link_directories(${HELIB_DIR})
+set(HELIB_DIR /usr/local/helib_pack)
+include_directories(${PROJECT_SOURCE_DIR}/lbsr ${PROJECT_SOURCE_DIR}/stdsc ${HELIB_DIR}/include)
+link_directories(${HELIB_DIR}/lib)
 
 set(COMMON_LIBS stdsc lbsr_share helib ntl gmp)
 

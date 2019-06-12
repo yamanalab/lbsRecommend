@@ -30,8 +30,8 @@
 #include <lbsr_pprs/lbsr_pprs_state.hpp>
 #include <lbsr_pprs/lbsr_pprs_psp_client.hpp>
 
-#include <FHE.h>
-#include <EncryptedArray.h>
+#include <helib/FHE.h>
+#include <helib/EncryptedArray.h>
 
 namespace lbsr_pprs
 {
