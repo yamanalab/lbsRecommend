@@ -86,7 +86,7 @@ Demo app consists of three processes: PSP, PPRS and Client(Target User). These p
     * Client sends result request to PSP, then receives the result from PSP and write it to stdout. (Fig: (8))
 * Usage
     ```sh
-    Usage: ./querier [-i input_filename]
+    Usage: ./client [-i input_filename]
     ```
     * -i input_filename : file path of input data (REQUIRED)    
 

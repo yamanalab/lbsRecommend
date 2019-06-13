@@ -98,7 +98,7 @@ void CallbackFunctionComputeRequest::request_function(
   uint64_t code, stdsc::StateContext& state)
 {
     STDSC_LOG_INFO(
-      "Received compute request from Querier. (current state : %lu)",
+      "Received compute request from Client. (current state : %lu)",
       state.current_state());
     STDSC_THROW_CALLBACK_IF_CHECK(
       kStateReady <= state.current_state(),
