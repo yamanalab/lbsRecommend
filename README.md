@@ -12,11 +12,11 @@ Implementation of the protocol with the functions:
 * glibc 2.17
 * g++ 4.8.5
 * cmake >=2.8
-* [HElib](https://github.com/shaih/HElib)
+* [HElib](https://github.com/homenc/HElib)
 * doxygen (If you generate a document)
 
 # Building
-1. Build and install [HElib](https://github.com/shaih/HElib) according to Option 1 in INSTALL.md.
+1. Build and install [HElib](https://github.com/homenc/HElib) according to Option 1 in INSTALL.md.
 2. Run following command to build the library.
     ```sh
     $ mkdir build && cd build
